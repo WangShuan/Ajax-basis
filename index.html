@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Ajax 入門</title>
+    <style>
+        b,i{
+            color: rgb(100, 10, 10);
+        }
+
+        h2 {
+            border-top: 2px dashed darkred;
+            color: firebrick;
+            padding-top: 15px;
+        }
+
+        p {
+            width: 460px;
+            height: auto;
+            background-color: lavenderblush;
+            line-height: 20px;
+            padding: 10px 20px;
+            border: 1px solid brown;
+        }
+
+        u {
+            background-color: lavenderblush;
+            color: darkred;
+        }
+
+        #box {
+            width: 120px;
+            overflow: hidden;
+        }
+
+        #box ul {
+            margin: 0;
+        }
+
+        #box li {
+            padding: 2px 0;
+        }
+
+        #box li:hover {
+            color: darkred;
+        }
+
+        table {
+            border: 1px solid brown;
+            padding: 5px;
+            background-color: lavenderblush;
+            text-align: right;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <h2 style="padding-top: 0;border: 0;">ajax 的使用方式</h2>
+
+    這裏逐行分析ajax的執行過程對應平時訪問頁面的過程<br><br>
+
+    <u>
+        //下面的xhr就是XMLHttpRequest縮寫
+    </u>
+
+    <p>
+        1. <b>var xhr = new XMLHttpRequest()</b> <br>
+        * 創建一個XMLHttpRequest對象 : 相當於打開一個瀏覽器 <br>
+        2. <b>xhr.open('GET', 'time.php')</b> <br>
+        * 打開與一個網址之間的連結 : 相當於在瀏覽器輸入網址 <br>
+        3. <b>xhr.send()</b> <br>
+        * 發送請求 : 相當於在輸入完地址後點擊回車 <br>
+        4. <b>xhr.onreadystatechange = fn(){ if(readyState == 4){....}}</b> <br>
+        * 指定狀態事件變化後的函數 : 相當於網頁呈現後的操作
+    </p>
+
+    <h2>ajax 的 readystate</h2>
+
+    正常在執行ajax請求時都會有一段代碼為<br>
+    request.onreadystatechange = fn(){ if(readyState == 4){....}} <br>
+    這裏詳細說明一下 readyState 的值所對應的所有狀態<br><br>
+
+    <u>
+        //readyState 有五種狀態分別是 0、1、2、3、4
+    </u>
+
+    <p>
+        0 : 初始狀態 什麼都沒做 只是定義xhr為一個新的XMLHttp請求<br>
+        1 : 已調用open方法 與要開啟的網站的服務器建立連結 <br>
+        2 : 已調用send方法且已接收到響應頭 但此時還沒有拿到響應體 <br>
+        3 : 正在下載響應體 如果響應體內容很多可能無法一次性獲取<br>
+        4 : 所有響應已完整下載 可隨意使用
+    </p>
+
+    <h2>關於 HTML5 提供的 onload方法</h2>
+
+    在所有支持HTML5的瀏覽器中 都可以使用onload方法 <br>
+    取代xhr.onreadystatechange = fn(){ if(readyState == 4){....}} <br><br>
+
+    <u>
+        //僅限對HTML5支持比較好的瀏覽器使用
+    </u>
+
+    <p>
+        xhr.onload = function(){ <br>
+        console.log(this.readyState) <i>//這裏的打印結果一定為4</i> <br>
+        }
+    </p>
+
+    <h2>遵循HTTP協議 必須有請求行、請求頭、請求體</h2>
+
+    這裏要注意的是設置請求頭時 必須要對應其請求體的格式 <br>
+    當你的請求體格式為 <b>key1=value1&key2=value2</b> 時 <br>
+    就要設置'Content-type'為'application/x-www-form-urlencoded' <br><br>
+
+    <u>
+        //下方請求體為json格式 請求頭需設為application/json
+    </u>
+
+    <p>
+        xhr.open('POST','time.php') <i>//請求行</i> <br>
+        xhr.setRequestHeader('Content-type','xxx') <i>//請求頭</i> <br>
+        xhr.send('{'foo':'123'}') <i>//請求體</i>
+    </p>
+
+    <h2>GET請求傳參案例：點擊li發送對應的請求</h2>
+
+    利用ajax獲取數據 並把數據中的name用li添加到頁面上 <br>
+    點擊當前的 li 時 發送GET請求並傳遞參數為當前數據的id
+    <br><br>
+
+    <u>
+        //發送GET請求傳參方式 > xhr.open('GET', 'users.php?id='+this.id)
+    </u>
+
+    <p>
+        獲取數據後使用 JSON.parse()方法 把數據內容轉成JSON數據<br>
+        當要給動態創建的元素添加事件功能時<br>
+        必須在創建時就註冊事件 不能直接從頁面獲取元素<br>
+        否則會獲取不到動態創建的元素
+    </p>
+
+    <div id="box"></div>
+
+    <script>
+        var req = new XMLHttpRequest()
+
+        req.open('GET', 'users.php')
+
+        req.send()
+
+        req.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                var data = JSON.parse(req.responseText)
+                var oBox = document.getElementById('box')
+                var oUl = document.createElement('ul')
+                for (i = 0; i < data.length; i++) {
+                    var oLi = document.createElement('li')
+                    var oA = document.createElement('a')
+                    oA.innerText = data[i].name
+                    oA.age = data[i].age
+                    oA.id = data[i].id
+
+                    // 這時候定義的點擊事件沒辦法獲取數據 只能獲取自定義屬性
+                    // oA.onclick=function(){
+                    //     alert(this.innerText+'的年齡是'+this.age)
+                    // }
+
+                    oLi.appendChild(oA)
+                    oUl.appendChild(oLi)
+
+                    // 若要在點擊後獲取數據 必須是在元素已被append到頁面之後
+                    oA.onclick = function () {
+                        var xhr = new XMLHttpRequest()
+                        xhr.open('GET', 'users.php?id=' + this.id)
+                        xhr.send()
+                        xhr.onreadystatechange = function () {
+                            if (this.readyState == 4) {
+                                alert(JSON.parse(this.responseText).age)
+                            }
+                        }
+                    }
+                }
+                oBox.appendChild(oUl)
+            }
+        }
+    </script>
+
+    <h2>POST請求案例：簡易登入</h2>
+
+    當輸入帳號為admin 密碼為123 時alert登入成功
+    <br><br>
+
+    <u>
+        //這裏請求體格式為key-value 所以必須設置請求頭為form-urlencoded
+    </u>
+
+    <br><br>
+
+    <table>
+        <tr>
+            <td>用戶名: </td>
+            <td><input type="text" id="name"></td>
+        </tr>
+        <tr>
+            <td>密碼: </td>
+            <td><input type="password" id="pw"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td style="float: right;"><button id="btn">登陸</button></td>
+        </tr>
+    </table>
+
+    <script>
+        var oBt = document.getElementById('btn')
+        var oName = document.getElementById('name')
+        var oPw = document.getElementById('pw')
+
+        oBt.onclick = function () {
+            var req = new XMLHttpRequest()
+            req.open('POST', 'login.php')
+            req.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+            req.send('username=' + oName.value + '&password=' + oPw.value)
+            req.onload = function () {
+                if (this.readyState == 4) {
+                    alert(this.responseText)
+                }
+            }
+            oName.value = ''
+            oPw.value = ''
+        }
+    </script>
+
+    <h2>同步(sync)與異步(async)</h2>
+
+    open()方法 參數3 為async 判斷是否為異步操作 可傳入布爾值 默認為true(異步) <br>
+    兩者差別在於 > 同步操作時 會等待send()方法發送請求執行完 才往下執行代碼 <br>
+    等於同步操作時 無法再通過 onreadystatechange 判斷 readyState了 <br>
+    因為send()方法執行完畢後 readyState已經是4 不會再發生狀態改變了
+    <br><br>
+
+    <u>
+        //跟中文的同步、異步的解釋剛好相反<br>
+        //同步(sync)：假設有兩件事要做，一次只做一件。<br>
+        //異步(async)：假設有兩件事要做，一次就做兩件。
+    </u>
+
+    <p>
+        我們之所以使用ajax 就是為了讓用戶體驗到更快速的服務<br>
+        讓我們在不刷新頁面的情況下 與數據庫建立連接 更新數據<br>
+        若是用同步操作 就會導致代碼在send()方法調用時等待數據接收<br>
+        並且在等待的過程中不執行任何動作 這樣會導致時間上的浪費<br>
+        所以現在同步操作已因為無法提高數據交互的工作效率 而被屏棄
+    </p>
+
+    <script>
+        console.time('異步操作時間')
+        var asyreq = new XMLHttpRequest()
+        asyreq.open('GET', 'time.php', true)
+        asyreq.send()
+        console.timeEnd('異步操作時間')
+
+        console.time('同步操作時間')
+        var syreq = new XMLHttpRequest()
+        syreq.open('GET', 'time.php', false)
+        syreq.send()
+        console.timeEnd('同步操作時間')
+    </script>
+
+    <h2>響應數據的格式</h2>
+
+    正常情況下 請求地址如果沒有設置頭 一律會被當成 text/html 類型的數據 <br>
+    所以我們的php檔最好都要照格式設置上 header 的 Content-Type <br>
+    但其實現在大多數幾乎都只使用 JSON 格式數據了 因為 xml 數據使用上太麻煩了
+    <br><br>
+
+    <u>
+        //若響應數據格式為json 就設置 header('Content-Type: application/json') <br>
+        //若響應數據格式為xml 就設置 header('Content-Type: application/xml')
+    </u>
+
+    <p>
+        當數據格式為 xml 時 接收時就要用responseXML <br>
+        它返回的是一個document 必須使用DOM操作來處理數據內容 <br>
+        這裏我們寫了一個 xml.php 用DOM操作獲取其標籤 name
+    </p>
+
+    <button id="getName">點我console.log標籤name</button>
+
+    <script>
+        var oBtn = document.getElementById('getName')
+
+        oBtn.onclick = function () {
+            var xhr = new XMLHttpRequest()
+            xhr.open('GET', 'xml.php')
+            xhr.send()
+            xhr.onreadystatechange = function () {
+                if (this.readyState == 4) {
+                    console.log(this.responseXML.documentElement.children[0])
+                }
+            }
+        }
+    </script>
+
+    <h2>兼容方案</h2>
+
+    XMLHttpRequest 在 IE5/6 版本的瀏覽器中有兼容問題 <br>
+    替代方式為 new ActiveXObject('Microsoft.XMLHTTP')
+
+    <p>
+        判斷 XMLHttpRequest 是否存在 : <i>window.XMLHttpRequest ?</i> <br>
+        如果 XMLHttpRequest 存在 : <i>new XMLHttpRequest()</i> <br>
+        不存在則 : <i>new ActiveXObject('Microsoft.XMLHTTP')</i>
+    </p>
+
+</body>
+
+</html>
